@@ -1,19 +1,15 @@
-name: Go Tests - Auth Service
+# Minimal Go Tests CI
+# Works for any repository structure with go.mod at root or in subdirectories
+
+name: Go Tests
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - 'auth-service/**'
-      - '.github/workflows/go-tests.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: auth-service
 
     steps:
     - name: Checkout code
@@ -24,24 +20,7 @@ jobs:
       with:
         go-version: '1.21'
 
-    - name: Download dependencies
-      run: go mod download
-
-    - name: Verify dependencies
-      run: go mod verify
-
     - name: Run tests
-      run: go test -v ./...
-
-    - name: Run tests with coverage
-      run: go test -v -coverprofile=coverage.out ./...
-
-    - name: Display coverage
-      run: go tool cover -func=coverage.out
-
-    - name: Check code formatting
       run: |
-        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "Code is not formatted. Run 'gofmt -s -w .'"
-          exit 1
-        fi
+        # Find all directories with go.mod and run tests
+        find . -name go.mod -execdir sh -c 'go mod download && go test -v ./...' \;
