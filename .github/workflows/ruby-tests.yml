@@ -23,4 +23,6 @@ jobs:
     - name: Run tests
       run: |
         # Find all directories with Gemfile and run tests
+        # Exit with error if any test fails
+        set -e
         find . -name Gemfile -execdir sh -c 'bundle install && bundle exec rspec' \;

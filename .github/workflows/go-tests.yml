@@ -23,4 +23,6 @@ jobs:
     - name: Run tests
       run: |
         # Find all directories with go.mod and run tests
+        # Exit with error if any test fails
+        set -e
         find . -name go.mod -execdir sh -c 'go mod download && go test -v ./...' \;
