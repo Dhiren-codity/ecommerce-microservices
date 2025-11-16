@@ -22,12 +22,14 @@ jobs:
 
     - name: Install dependencies and run tests
       run: |
-        set -e
         python -m pip install --upgrade pip
         pip install pytest pytest-cov
 
-        # Install requirements if exists
-        find . -name requirements.txt -exec pip install -r {} \;
+        # Install all requirements.txt files found
+        while IFS= read -r -d '' reqfile; do
+          echo "Installing from $reqfile"
+          pip install -r "$reqfile"
+        done < <(find . -name requirements.txt -print0)
 
-        # Run pytest (it auto-discovers tests)
+        # Run pytest - it will fail if no tests found or tests fail
         pytest -v
