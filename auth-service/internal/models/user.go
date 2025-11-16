@@ -9,11 +9,13 @@ import (
 )
 
 type User struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	Password  string    `json:"-"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Password     string    `json:"-"`
+	Name         string    `json:"name"`
+	CreatedAt    time.Time `json:"created_at"`
+	LastActivity time.Time `json:"last_activity"`
+	LoginCount   int       `json:"login_count"`
 }
 
 func ValidateEmail(email string) bool {
@@ -62,9 +64,45 @@ func NewUser(email, password, name string) (*User, error) {
 	}
 
 	return &User{
-		Email:     email,
-		Password:  hashedPassword,
-		Name:      name,
-		CreatedAt: time.Now(),
+		Email:        email,
+		Password:     hashedPassword,
+		Name:         name,
+		CreatedAt:    time.Now(),
+		LastActivity: time.Now(),
+		LoginCount:   0,
 	}, nil
+}
+
+func (u *User) RecordActivity() {
+	u.LastActivity = time.Now()
+}
+
+func (u *User) IncrementLoginCount() {
+	u.LoginCount++
+	u.LastActivity = time.Now()
+}
+
+func (u *User) IsActive(inactiveDays int) bool {
+	if inactiveDays <= 0 {
+		return true
+	}
+	threshold := time.Now().AddDate(0, 0, -inactiveDays)
+	return u.LastActivity.After(threshold)
+}
+
+func (u *User) GetActivityScore() int {
+	daysSinceCreation := int(time.Since(u.CreatedAt).Hours() / 24)
+	if daysSinceCreation == 0 {
+		daysSinceCreation = 1
+	}
+
+	activityScore := (u.LoginCount * 10) / daysSinceCreation
+
+	if u.IsActive(7) {
+		activityScore += 20
+	} else if u.IsActive(30) {
+		activityScore += 10
+	}
+
+	return activityScore
 }
