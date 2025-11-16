@@ -103,3 +103,81 @@ class AnalyticsService:
         )
 
         return calculate_growth_rate(current_revenue, previous_revenue)
+
+    def get_user_activity_stats(self, user_id: str) -> Dict:
+        if not user_id:
+            return {"error": "user_id is required"}
+
+        user_events = [e for e in self.events if e.user_id == user_id]
+        user_sales = [s for s in self.sales_data if s["user_id"] == user_id]
+
+        if not user_events and not user_sales:
+            return {
+                "user_id": user_id,
+                "total_events": 0,
+                "total_purchases": 0,
+                "total_spent": 0.0,
+                "activity_level": "inactive"
+            }
+
+        total_events = len(user_events)
+        total_purchases = len(user_sales)
+        total_spent = sum(sale["amount"] for sale in user_sales)
+
+        activity_level = self._calculate_activity_level(total_events, total_purchases)
+
+        return {
+            "user_id": user_id,
+            "total_events": total_events,
+            "total_purchases": total_purchases,
+            "total_spent": total_spent,
+            "activity_level": activity_level,
+            "average_purchase": total_spent / total_purchases if total_purchases > 0 else 0.0
+        }
+
+    def _calculate_activity_level(self, events: int, purchases: int) -> str:
+        score = events + (purchases * 5)
+
+        if score >= 50:
+            return "highly_active"
+        elif score >= 20:
+            return "active"
+        elif score >= 5:
+            return "moderate"
+        else:
+            return "low"
+
+    def get_inactive_users(self, days: int = 30) -> List[str]:
+        if days <= 0:
+            return []
+
+        cutoff_date = datetime.now() - timedelta(days=days)
+        active_user_ids = set()
+
+        for event in self.events:
+            if event.timestamp >= cutoff_date:
+                active_user_ids.add(event.user_id)
+
+        for sale in self.sales_data:
+            if sale["timestamp"] >= cutoff_date:
+                active_user_ids.add(sale["user_id"])
+
+        all_user_ids = {user["user_id"] for user in self.user_data}
+        inactive_users = all_user_ids - active_user_ids
+
+        return sorted(list(inactive_users))
+
+    def calculate_engagement_rate(self) -> float:
+        if not self.user_data:
+            return 0.0
+
+        now = datetime.now()
+        week_ago = now - timedelta(days=7)
+
+        engaged_users = set()
+        for event in self.events:
+            if event.timestamp >= week_ago:
+                engaged_users.add(event.user_id)
+
+        engagement_rate = (len(engaged_users) / len(self.user_data)) * 100
+        return round(engagement_rate, 2)
