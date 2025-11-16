@@ -1,3 +1,6 @@
+# Minimal Go Tests CI
+# Works for any repository structure with go.mod at root or in subdirectories
+
 name: Go Tests
 
 on:
@@ -17,22 +20,7 @@ jobs:
       with:
         go-version: '1.21'
 
-    - name: Install dependencies
-      run: |
-        cd auth-service
-        go mod download
-
     - name: Run tests
       run: |
-        cd auth-service
-        go test -v ./...
-
-    - name: Run tests with coverage
-      run: |
-        cd auth-service
-        go test -v -coverprofile=coverage.out ./...
-
-    - name: Display coverage
-      run: |
-        cd auth-service
-        go tool cover -func=coverage.out
+        # Find all directories with go.mod and run tests
+        find . -name go.mod -execdir sh -c 'go mod download && go test -v ./...' \;

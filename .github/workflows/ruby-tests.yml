@@ -1,3 +1,6 @@
+# Minimal Ruby Tests CI
+# Works for any repository structure with Gemfile
+
 name: Ruby Tests
 
 on:
@@ -16,24 +19,8 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.2'
-        bundler-cache: true
-
-    - name: Install dependencies
-      run: |
-        cd api-gateway
-        bundle install
 
     - name: Run tests
       run: |
-        cd api-gateway
-        bundle exec rspec
-
-    - name: Run tests with documentation format
-      run: |
-        cd api-gateway
-        bundle exec rspec --format documentation
-
-    - name: Generate coverage report
-      run: |
-        cd api-gateway
-        bundle exec rspec --format progress
+        # Find all directories with Gemfile and run tests
+        find . -name Gemfile -execdir sh -c 'bundle install && bundle exec rspec' \;
