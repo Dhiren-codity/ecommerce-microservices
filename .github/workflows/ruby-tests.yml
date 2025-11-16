@@ -1,0 +1,39 @@
+name: Ruby Tests - API Gateway
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'api-gateway/**'
+      - '.github/workflows/ruby-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: api-gateway
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+        working-directory: api-gateway
+
+    - name: Install dependencies
+      run: bundle install
+
+    - name: Run tests
+      run: bundle exec rspec
+
+    - name: Run tests with documentation format
+      run: bundle exec rspec --format documentation
+
+    - name: Generate coverage report
+      run: bundle exec rspec --format progress
